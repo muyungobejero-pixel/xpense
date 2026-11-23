@@ -49,6 +49,8 @@ The Swift sources already live in `ios/Xpense/`, which `project.yml` points at.
 | `Xpense/SettingsView.swift` | Currency, categories, backup export/import, reset. |
 | `Xpense/AuthManager.swift` | Google Sign-In state (optional sign-in). |
 | `Xpense/LoginView.swift` | "Sign in with Google" / "Continue without signing in". |
+| `Xpense/NotificationScheduler.swift` | Local notification scheduling (due-date reminders). |
+| `Xpense/CloudSyncManager.swift` | Firestore cloud sync (whole-document per user). |
 | `project.yml` | XcodeGen project spec. |
 
 ## Notes
@@ -87,3 +89,56 @@ xcodegen generate
 
 > **Note:** Older Google Sign-In setups used a `GoogleService-Info.plist`;
 > recent versions take the client ID directly via code + `Info.plist` URL scheme.
+
+## Cloud sync (Firebase) setup
+
+Signing in with Google also enables **cloud sync**: your whole dataset is saved
+to Firestore under `users/{googleUserID}/xpense/data` and pulled back on sign-in.
+"Skip" (anonymous) users remain local-only. The app falls back to local
+`UserDefaults` silently if Firestore isn't configured or is unreachable.
+
+To enable cloud sync:
+
+1. Create a Firebase project at https://console.firebase.google.com.
+2. Add an **iOS app** with bundle ID `io.muyungobejero.xpense`.
+3. Download **`GoogleService-Info.plist`** and place it in `ios/Xpense/`.
+4. In the console, create a **Cloud Firestore** database (test mode is fine to
+   start). Lock it down with security rules keyed on the signed-in user:
+
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /users/{uid}/{document=**} {
+         allow read, write: if request.auth != null && request.auth.uid == uid;
+       }
+     }
+   }
+   ```
+
+   > These rules assume you are also using **Firebase Authentication** with the
+   > same user ID (see below). If you are not using Firebase Auth, you'll need a
+   > different access-control strategy.
+
+Then regenerate and rebuild:
+
+```sh
+xcodegen generate
+```
+
+### Note on Firebase Auth
+
+Currently the app uses the **Google Sign-In SDK directly** (`userID` = Google
+`sub` claim) and stores data under that ID. The Firestore security rules above
+require `request.auth.uid` to match — which only works if you also enable
+**Firebase Authentication** and sign in with Google *through Firebase*. Two
+options:
+
+- **Simplest for now:** use Firestore in "test mode" (open rules) without Firebase
+  Auth while developing locally, then lock it down before shipping.
+- **Properly:** add Firebase Auth and exchange the Google credential for a
+  Firebase session so `request.auth.uid` matches `userID`. This is a small
+  additional step I can implement.
+
+For a personal tracker in development, "test mode" is sufficient to validate
+sync end-to-end.

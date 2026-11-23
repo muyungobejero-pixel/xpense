@@ -18,6 +18,10 @@ final class Store: ObservableObject {
     /// don't share data.
     private(set) var namespace: String = ""
 
+    /// Optional cloud sync. When set and the user is signed in, saves are also
+    /// pushed to Firestore and namespace switches pull latest data.
+    private var cloud: CloudSyncManager?
+
     /// The fully-qualified storage key for the current namespace.
     private var storageKey: String {
         Self.storageKeyPrefix + (namespace.isEmpty ? "" : ".\(namespace)")
@@ -44,13 +48,44 @@ final class Store: ObservableObject {
     /// Switches the store to the given data owner. Reloads that user's data
     /// (freshly seeded if none exists yet) and resets the view to this month.
     /// Called whenever the auth identity changes.
-    func setNamespace(_ newNamespace: String) {
-        guard newNamespace != namespace else { return }
-        namespace = newNamespace
-        data = AppData()
-        currentMonth = currentMonthKey()
-        filter = .all
-        loadForNamespace()
+    ///
+    /// When cloud sync is available and the user is signed in, pulls latest
+    /// data from Firestore before falling back to local cache.
+    func setNamespace(_ newNamespace: String, cloud: CloudSyncManager? = nil) {
+        self.cloud = cloud
+
+        let changed = newNamespace != namespace
+        if changed {
+            namespace = newNamespace
+            data = AppData()
+            currentMonth = currentMonthKey()
+            filter = .all
+            loadForNamespace()
+        }
+
+        // Pull cloud data for signed-in users (skip anonymous/empty).
+        if !newNamespace.isEmpty, newNamespace != "anonymous" {
+            pullFromCloud(userID: newNamespace)
+        }
+    }
+
+    /// Pulls the user's cloud data and, if present, replaces local state with it.
+    private func pullFromCloud(userID: String) {
+        cloud?.pull(userID: userID) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .success(let remote):
+                if let remote {
+                    self.data = remote
+                    self.seedIfEmpty()
+                    self.ensureCategoriesCoverItems()
+                    self.save()
+                    self.resyncNotifications()
+                }
+            case .failure(let error):
+                print("[Xpense] Cloud pull failed: \(error.localizedDescription)")
+            }
+        }
     }
 
     private func loadForNamespace() {
@@ -75,6 +110,15 @@ final class Store: ObservableObject {
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: storageKey)
         }
+        pushToCloudIfNeeded()
+    }
+
+    /// Pushes local data to the cloud when signed in (not anonymous/empty).
+    private func pushToCloudIfNeeded() {
+        guard let cloud,
+              !namespace.isEmpty,
+              namespace != "anonymous" else { return }
+        cloud.push(data, userID: namespace)
     }
 
     private func seedIfEmpty() {
