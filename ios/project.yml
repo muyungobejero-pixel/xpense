@@ -1,7 +1,7 @@
 name: Xpense
 
 options:
-  bundleIdPrefix: com.example
+  bundleIdPrefix: io.muyungobejero
   deploymentTarget:
     iOS: "16.0"
 
@@ -22,7 +22,7 @@ targets:
         product: GoogleSignIn
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.xpense
+        PRODUCT_BUNDLE_IDENTIFIER: io.muyungobejero.xpense
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_VERSION: "5.0"
         CODE_SIGN_STYLE: Automatic

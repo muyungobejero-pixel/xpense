@@ -23,8 +23,7 @@ summary + progress, overdue/due-soon hints, and JSON backup export/import.
 3. Open the generated `Xpense.xcodeproj`, select a simulator, and run (⌘R).
 
 The Swift sources already live in `ios/Xpense/`, which `project.yml` points at.
-Change `PRODUCT_BUNDLE_IDENTIFIER` (currently `com.example.xpense`) to your own
-reverse-DNS bundle id before shipping.
+`PRODUCT_BUNDLE_IDENTIFIER` is already set to `io.muyungobejero.xpense`.
 
 ## Manual setup (no XcodeGen)
 
@@ -72,7 +71,7 @@ you must supply your own OAuth credentials (you cannot use a placeholder).
 2. Enable the **Google Sign-In** API.
 3. Under **APIs & Services > Credentials > Create Credentials > OAuth client ID**,
    choose **iOS**.
-4. Set the **Bundle ID** to `com.example.xpense` (or your actual bundle id).
+4. Set the **Bundle ID** to `io.muyungobejero.xpense` (or your actual bundle id).
 5. After creating it, you'll get a **Client ID** (looks like
    `1234567890-xxxxxxxx.apps.googleusercontent.com`) and a **Reversed client ID**
    (the same, with components in reverse order).
