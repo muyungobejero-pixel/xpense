@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Xpense — Monthly Expense Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">X</span>
+        <h1>Xpense</h1>
+      </div>
+
+      <div class="month-nav">
+        <button class="icon-btn" id="prev-month" title="Previous month" aria-label="Previous month">‹</button>
+        <button class="month-label" id="month-label" title="Jump to current month"></button>
+        <button class="icon-btn" id="next-month" title="Next month" aria-label="Next month">›</button>
+        <button class="today-btn" id="today-btn">Today</button>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="icon-btn" id="recurring-btn" title="Recurring bills" aria-label="Recurring bills">↻</button>
+        <button class="icon-btn" id="settings-btn" title="Settings" aria-label="Settings">⚙</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="summary" aria-label="Summary">
+        <div class="card total">
+          <span class="card-label">Total</span>
+          <span class="card-value" id="total-amount">$0.00</span>
+          <span class="card-sub" id="total-count">0 items</span>
+        </div>
+        <div class="card unpaid">
+          <span class="card-label">Unpaid</span>
+          <span class="card-value" id="unpaid-amount">$0.00</span>
+          <span class="card-sub" id="unpaid-count">0 items</span>
+        </div>
+        <div class="card paid">
+          <span class="card-label">Paid</span>
+          <span class="card-value" id="paid-amount">$0.00</span>
+          <span class="card-sub" id="paid-count">0 items</span>
+        </div>
+      </section>
+
+      <section class="progress-wrap" aria-label="Progress">
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <span class="progress-text" id="progress-text">0% paid</span>
+      </section>
+
+      <section class="toolbar">
+        <div class="filters" role="tablist" aria-label="Filter">
+          <button class="filter-btn active" data-filter="all" role="tab" aria-selected="true">All</button>
+          <button class="filter-btn" data-filter="unpaid" role="tab" aria-selected="false">Unpaid</button>
+          <button class="filter-btn" data-filter="paid" role="tab" aria-selected="false">Paid</button>
+        </div>
+        <button class="add-btn" id="add-btn">+ Add expense</button>
+      </section>
+
+      <section class="list" id="list" aria-live="polite"></section>
+
+      <section class="empty" id="empty" hidden>
+        <p>No expenses yet for this month.</p>
+        <button class="add-btn" id="empty-add-btn">+ Add your first expense</button>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add / Edit modal -->
+  <div class="modal-backdrop" id="modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-header">
+        <h2 id="modal-title">Add expense</h2>
+        <button class="icon-btn close-btn" id="modal-close" aria-label="Close">✕</button>
+      </div>
+      <form id="expense-form">
+        <input type="hidden" id="field-id" />
+        <label>
+          Name
+          <input type="text" id="field-name" placeholder="e.g. Rent" required autofocus />
+        </label>
+        <label>
+          Amount
+          <input type="number" id="field-amount" placeholder="0.00" min="0" step="0.01" required />
+        </label>
+        <div class="field-row">
+          <label>
+            Due day
+            <input type="number" id="field-due" placeholder="1" min="1" max="31" />
+          </label>
+          <label>
+            Category
+            <select id="field-category"></select>
+            <span class="field-hint">Pick a category, or choose "Add new" to create one.</span>
+          </label>
+        </div>
+        <label id="category-new-wrap" hidden>
+          New category name
+          <input type="text" id="field-category-new" placeholder="e.g. Fuel" />
+        </label>
+        <label>
+          Repeats
+          <select id="field-recur">
+            <option value="none">This month only</option>
+            <option value="monthly">Every month</option>
+            <option value="bimonthly">Every other month (2 months)</option>
+            <option value="quarterly">Quarterly (every 3 months)</option>
+            <option value="biannually">Bi-annually (every 6 months)</option>
+            <option value="annually">Annually (every year)</option>
+          </select>
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="stop-btn" id="stop-recur-btn" hidden>Stop recurring</button>
+          <button type="button" class="delete-btn" id="delete-btn" hidden>Delete</button>
+          <div class="spacer"></div>
+          <button type="button" class="cancel-btn" id="cancel-btn">Cancel</button>
+          <button type="submit" class="save-btn">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Recurring bills modal -->
+  <div class="modal-backdrop" id="recurring-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="recurring-title">
+      <div class="modal-header">
+        <h2 id="recurring-title">Recurring bills</h2>
+        <button class="icon-btn close-btn" id="recurring-close" aria-label="Close">✕</button>
+      </div>
+      <div class="recurring-list" id="recurring-list"></div>
+    </div>
+  </div>
+
+  <!-- Settings modal -->
+  <div class="modal-backdrop" id="settings-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="modal-header">
+        <h2 id="settings-title">Settings</h2>
+        <button class="icon-btn close-btn" id="settings-close" aria-label="Close">✕</button>
+      </div>
+      <form id="settings-form">
+        <label>
+          Currency
+          <select id="field-currency">
+            <option value="PHP">PHP — ₱ (Philippine Peso)</option>
+            <option value="USD">USD — $ (US Dollar)</option>
+            <option value="EUR">EUR — € (Euro)</option>
+            <option value="GBP">GBP — £ (British Pound)</option>
+            <option value="CAD">CAD — $ (Canadian Dollar)</option>
+            <option value="AUD">AUD — $ (Australian Dollar)</option>
+            <option value="JPY">JPY — ¥ (Japanese Yen)</option>
+            <option value="INR">INR — ₹ (Indian Rupee)</option>
+          </select>
+        </label>
+        <div class="settings-section">
+          <div class="settings-section-title">Categories</div>
+          <div id="category-manager"></div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">Data</div>
+          <div class="data-actions">
+            <button type="button" class="rule-btn" id="export-btn">Export backup</button>
+            <button type="button" class="rule-btn" id="import-btn">Import backup</button>
+            <input type="file" id="import-file" accept="application/json,.json" hidden />
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="delete-btn" id="reset-btn">Reset all data</button>
+          <div class="spacer"></div>
+          <button type="submit" class="save-btn">Done</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="ui.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
