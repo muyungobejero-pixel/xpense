@@ -25,6 +25,21 @@ const DEFAULT_CATEGORIES = [
   "Other",
 ];
 
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 const DEFAULT_ITEMS = [
   { name: "Rent / Mortgage", amount: 1200, category: "Housing", dueDay: 1 },
   { name: "Electricity", amount: 90, category: "Utilities", dueDay: 10 },
@@ -66,6 +81,30 @@ function recurInterval(recur) {
 
 function recurLabel(recur) {
   return RECUR_LABELS[recur] || "";
+}
+
+function monthName(n) {
+  return MONTHS[n - 1] || "";
+}
+
+function anchorForMonth(month) {
+  const y = new Date().getFullYear();
+  return `${y}-${String(month).padStart(2, "0")}`;
+}
+
+function anchorMonth(item) {
+  const a = item && item.anchor;
+  if (typeof a !== "string") return null;
+  const m = parseInt(a.split("-")[1], 10);
+  return m >= 1 && m <= 12 ? m : null;
+}
+
+function recurDisplay(item) {
+  if (!item || !item.recur || item.recur === "none") return "";
+  let label = recurLabel(item.recur);
+  const m = anchorMonth(item);
+  if (m && item.recur !== "monthly") label += ` (${monthName(m)})`;
+  return label;
 }
 
 /* ---------- Storage ---------- */

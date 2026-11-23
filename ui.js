@@ -42,6 +42,8 @@ const els = {
   fieldCategoryNew: $("#field-category-new"),
   categoryNewWrap: $("#category-new-wrap"),
   fieldRecur: $("#field-recur"),
+  fieldRecurMonth: $("#field-recur-month"),
+  recurMonthWrap: $("#recur-month-wrap"),
   deleteBtn: $("#delete-btn"),
   stopRecurBtn: $("#stop-recur-btn"),
 
@@ -122,12 +124,12 @@ function renderItem(item) {
   const metaParts = [];
   if (item.category) metaParts.push(`<span class="badge"></span>`);
   if (item.dueDay) metaParts.push(`<span>Due ${ordinal(item.dueDay)}</span>`);
-  if (item.recur && item.recur !== "none") {
-    const label = recurLabel(item.recur);
+  const recurText = recurDisplay(item);
+  if (recurText) {
     metaParts.push(
       item.auto
-        ? `<span class="auto-badge">↻ ${label} · auto</span>`
-        : `<span class="recur-badge">↻ ${label}</span>`
+        ? `<span class="auto-badge">↻ ${recurText} · auto</span>`
+        : `<span class="recur-badge">↻ ${recurText}</span>`
     );
   }
   const status = getDueStatus(item);
@@ -188,6 +190,24 @@ function renderCategoryOptions(selected) {
   els.categoryNewWrap.hidden = true;
 }
 
+function renderRecurMonthOptions(month) {
+  const select = els.fieldRecurMonth;
+  select.innerHTML = "";
+  MONTHS.forEach((name, i) => {
+    const o = document.createElement("option");
+    o.value = String(i + 1);
+    o.textContent = name;
+    select.appendChild(o);
+  });
+  select.value = String(month || new Date().getMonth() + 1);
+}
+
+function updateRecurMonthVisibility() {
+  const recur = els.fieldRecur.value;
+  const needsMonth = ["bimonthly", "quarterly", "biannually", "annually"].includes(recur);
+  els.recurMonthWrap.hidden = !needsMonth;
+}
+
 function renderCategoryManager() {
   const container = els.categoryManager;
   container.innerHTML = "";
@@ -229,7 +249,7 @@ function renderRecurringList() {
       <div class="recurring-rule-main">
         <div class="recurring-rule-name"></div>
         <div class="recurring-rule-meta">
-          <span class="recur-badge">↻ ${recurLabel(rule.recur)}</span>
+          <span class="recur-badge">↻ ${recurDisplay(rule)}</span>
           ${rule.category ? `<span class="badge"></span>` : ""}
           ${rule.dueDay ? `<span>Due ${ordinal(rule.dueDay)}</span>` : ""}
         </div>

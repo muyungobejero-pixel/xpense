@@ -23,6 +23,8 @@ function openAdd() {
   els.stopRecurBtn.hidden = true;
   els.deleteBtn.textContent = "Delete";
   renderCategoryOptions("");
+  renderRecurMonthOptions(new Date().getMonth() + 1);
+  updateRecurMonthVisibility();
   els.modal.hidden = false;
   els.fieldName.focus();
 }
@@ -37,6 +39,8 @@ function openEdit(id) {
   els.fieldDue.value = item.dueDay || "";
   renderCategoryOptions(item.category || "");
   els.fieldRecur.value = item.recur || "none";
+  renderRecurMonthOptions(anchorMonth(item) || new Date().getMonth() + 1);
+  updateRecurMonthVisibility();
   els.deleteBtn.hidden = false;
   els.stopRecurBtn.hidden = !isRecurring(item);
   els.deleteBtn.textContent = isRecurring(item) ? "Delete this month" : "Delete";
@@ -57,6 +61,12 @@ function saveFromForm(e) {
   const addingCategory = els.fieldCategory.value === "__add__";
   const category = (addingCategory ? els.fieldCategoryNew.value : els.fieldCategory.value).trim();
   const recur = els.fieldRecur.value || "none";
+  const needsMonth = ["bimonthly", "quarterly", "biannually", "annually"].includes(recur);
+  const anchor = recur === "none"
+    ? undefined
+    : needsMonth
+      ? anchorForMonth(parseInt(els.fieldRecurMonth.value, 10))
+      : currentMonth;
 
   if (!name || isNaN(amount) || amount < 0) return;
 
@@ -70,15 +80,14 @@ function saveFromForm(e) {
   if (id) {
     const item = items.find((i) => i.id === id);
     if (item) {
-      const prevRecur = item.recur;
       item.name = name;
       item.amount = amount;
       item.dueDay = dueDay;
       item.category = category;
       item.recur = recur;
+      item.anchor = anchor;
       if (recur !== "none") {
         if (!item.seriesId) item.seriesId = makeId();
-        if (prevRecur !== recur || !item.anchor) item.anchor = currentMonth;
         if (stoppedSeries.delete(item.seriesId)) saveStopped();
       }
     }
@@ -87,7 +96,7 @@ function saveFromForm(e) {
       id: makeId(),
       seriesId: recur !== "none" ? makeId() : undefined,
       recur,
-      anchor: recur !== "none" ? currentMonth : undefined,
+      anchor,
       name,
       amount,
       dueDay,
@@ -301,6 +310,7 @@ els.fieldCategory.addEventListener("change", () => {
   els.categoryNewWrap.hidden = !adding;
   if (adding) els.fieldCategoryNew.focus();
 });
+els.fieldRecur.addEventListener("change", updateRecurMonthVisibility);
 els.deleteBtn.addEventListener("click", deleteCurrent);
 els.stopRecurBtn.addEventListener("click", stopCurrentRecurring);
 
