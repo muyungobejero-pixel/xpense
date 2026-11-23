@@ -48,6 +48,8 @@ reverse-DNS bundle id before shipping.
 | `Xpense/ExpenseEditorView.swift` | Add/edit sheet. |
 | `Xpense/RecurringView.swift` | Recurring bills list. |
 | `Xpense/SettingsView.swift` | Currency, categories, backup export/import, reset. |
+| `Xpense/AuthManager.swift` | Google Sign-In state (optional sign-in). |
+| `Xpense/LoginView.swift` | "Sign in with Google" / "Continue without signing in". |
 | `project.yml` | XcodeGen project spec. |
 
 ## Notes
@@ -58,3 +60,31 @@ reverse-DNS bundle id before shipping.
   "stop recurring" keeping past/current months and removing future ones.
 - Minimum target is iOS 16 because of `NavigationStack`, `ShareLink`, and
   `.formatted(.currency(code:))` usage.
+
+## Google Sign-In setup
+
+Sign-in is **optional** — the launch screen offers "Sign in with Google" and a
+"Continue without signing in" option. To make the Google button actually work,
+you must supply your own OAuth credentials (you cannot use a placeholder).
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/) and
+   create (or select) a project.
+2. Enable the **Google Sign-In** API.
+3. Under **APIs & Services > Credentials > Create Credentials > OAuth client ID**,
+   choose **iOS**.
+4. Set the **Bundle ID** to `com.example.xpense` (or your actual bundle id).
+5. After creating it, you'll get a **Client ID** (looks like
+   `1234567890-xxxxxxxx.apps.googleusercontent.com`) and a **Reversed client ID**
+   (the same, with components in reverse order).
+6. Fill in your credentials in two places:
+   - `project.yml` → `GIDClientID` and the `CFBundleURLSchemes` entry.
+   - `Xpense/AuthManager.swift` → the `clientID` constant.
+
+Then regenerate the project:
+
+```sh
+xcodegen generate
+```
+
+> **Note:** Older Google Sign-In setups used a `GoogleService-Info.plist`;
+> recent versions take the client ID directly via code + `Info.plist` URL scheme.

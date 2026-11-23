@@ -5,6 +5,11 @@ options:
   deploymentTarget:
     iOS: "16.0"
 
+packages:
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: 8.0.0
+
 targets:
   Xpense:
     type: application
@@ -12,6 +17,9 @@ targets:
     deploymentTarget: "16.0"
     sources:
       - Xpense
+    dependencies:
+      - package: GoogleSignIn
+        product: GoogleSignIn
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.example.xpense
@@ -24,3 +32,14 @@ targets:
         CODE_SIGN_STYLE: Automatic
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
+    info:
+      path: Xpense/Info.plist
+      properties:
+        # --- Google Sign-In configuration ---
+        # Your OAuth client ID from Google Cloud Console.
+        GIDClientID: 1083755514063-g3bor3bpok2oh3hi9crg9q702i0a3iaf.apps.googleusercontent.com
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              # The "reversed client ID" — your client ID with the
+              # dot-separated components in reverse order.
+              - com.googleusercontent.apps.1083755514063-g3bor3bpok2oh3hi9crg9q702i0a3iaf

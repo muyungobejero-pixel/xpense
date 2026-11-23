@@ -3,6 +3,7 @@ import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @EnvironmentObject var store: Store
+    @EnvironmentObject var auth: AuthManager
     @Environment(\.dismiss) var dismiss
 
     @State private var showImporter = false
@@ -16,6 +17,36 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section("Account") {
+                    if let user = auth.currentUser {
+                        HStack {
+                            Label {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(user.name.isEmpty ? user.email : user.name)
+                                        .font(.body)
+                                    if !user.email.isEmpty {
+                                        Text(user.email)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            } icon: {
+                                Image(systemName: "person.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        Button("Sign out", role: .destructive) {
+                            auth.signOut()
+                        }
+                    } else {
+                        Button("Sign in with Google") {
+                            dismiss()
+                            auth.showLogin()
+                        }
+                    }
+                }
+
                 Section("Currency") {
                     Picker("Currency", selection: $store.data.currency) {
                         ForEach(currencies, id: \.self) { c in

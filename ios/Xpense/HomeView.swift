@@ -202,8 +202,18 @@ private struct ExpenseRow: View {
     }
 
     private func ordinal(_ n: Int) -> String {
-        let s = ["th", "st", "nd", "rd"]
-        let v = n % 100
-        return "\(n)" + (s[(v - 20) % 10] ?? s[v] ?? s[0])
+        let suffix: String
+        switch n % 100 {
+        case 11, 12, 13:
+            suffix = "th"
+        default:
+            switch n % 10 {
+            case 1: suffix = "st"
+            case 2: suffix = "nd"
+            case 3: suffix = "rd"
+            default: suffix = "th"
+            }
+        }
+        return "\(n)\(suffix)"
     }
 }
