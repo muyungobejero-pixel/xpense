@@ -23,6 +23,13 @@ final class AuthManager: ObservableObject {
     /// sign-in is optional; we simply expose who is signed in for now.
     var isSignedIn: Bool { currentUser != nil }
 
+    /// A stable namespace identifying the current data owner. This is the
+    /// Google user ID when signed in, or `"anonymous"` when the user skipped.
+    /// `Store` uses it to keep each identity's data isolated in `UserDefaults`.
+    var storageNamespace: String {
+        currentUser?.userID ?? (didSkip ? "anonymous" : "")
+    }
+
     /// Persist the "stay signed in" preference between launches.
     @AppStorage("xpense.auth.signedOut") private var signedOut = false
 
@@ -99,6 +106,7 @@ final class AuthManager: ObservableObject {
 
     private func setUser(_ user: GIDGoogleUser) {
         self.currentUser = GoogleUser(
+            userID: user.userID ?? "",
             name: user.profile?.name ?? "",
             email: user.profile?.email ?? ""
         )
@@ -117,6 +125,9 @@ final class AuthManager: ObservableObject {
 
 /// A UI-friendly snapshot of a signed-in Google user.
 struct GoogleUser {
+    /// Stable Google account identifier (the `sub` claim). Used to namespace
+    /// each user's stored data. Empty only if the provider didn't return one.
+    let userID: String
     let name: String
     let email: String
 }

@@ -79,6 +79,9 @@ struct AppData: Codable {
     var categories: [String] = AppData.defaultCategories
     var stoppedSeries: Set<String> = []
     var currency: String = "PHP"
+    var notificationsEnabled: Bool = true
+    /// How many days before a due date to notify. Default 1.
+    var notificationLeadDays: Int = 1
 
     static let defaultCategories = [
         "Housing", "Utilities", "Subscriptions", "Insurance",

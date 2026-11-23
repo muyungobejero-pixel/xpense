@@ -11,6 +11,7 @@
 		111ECE6A7F1068EB9AB3B35C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C74581829EFBF0FF97798E38 /* SettingsView.swift */; };
 		13266725446F84471AE0F76F /* ExpenseEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C78EDB2AB716B34EF6C037 /* ExpenseEditorView.swift */; };
 		209140257B8DF093A8DF344D /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DF01D309788039D535D5E09 /* AuthManager.swift */; };
+		314634038926A2A8952445BD /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 511BCC003B5DA76ACAEC9F8A /* NotificationScheduler.swift */; };
 		3E39E42B6CFD37A3BAF2DBAA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29F77B11EF8CAC106765876 /* HomeView.swift */; };
 		7E3AEDA47DBD7571EC4AFCB4 /* RecurringView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D0259F0D09C68F34C7BB62 /* RecurringView.swift */; };
 		CFF622F77CD56606FB2C4EF8 /* XpenseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ED7F5847124AB72E7A3E2D4 /* XpenseApp.swift */; };
@@ -24,6 +25,7 @@
 		1F8317F63F28C4038AFF7BA1 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		32D0259F0D09C68F34C7BB62 /* RecurringView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringView.swift; sourceTree = "<group>"; };
 		4DF01D309788039D535D5E09 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
+		511BCC003B5DA76ACAEC9F8A /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
 		56084DD900518AFBAA3E5065 /* Xpense.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Xpense.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9ED7F5847124AB72E7A3E2D4 /* XpenseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XpenseApp.swift; sourceTree = "<group>"; };
 		A29F77B11EF8CAC106765876 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -62,6 +64,7 @@
 				DA114CAB5168942E0FD4DD18 /* Info.plist */,
 				1F8317F63F28C4038AFF7BA1 /* LoginView.swift */,
 				1CF73C9BD203F5EFFB9792BB /* Models.swift */,
+				511BCC003B5DA76ACAEC9F8A /* NotificationScheduler.swift */,
 				32D0259F0D09C68F34C7BB62 /* RecurringView.swift */,
 				C74581829EFBF0FF97798E38 /* SettingsView.swift */,
 				FB67FAF98A053281E8E541EC /* Store.swift */,
@@ -146,6 +149,7 @@
 				3E39E42B6CFD37A3BAF2DBAA /* HomeView.swift in Sources */,
 				0A47EA7956A4AAF546BC4E4B /* LoginView.swift in Sources */,
 				DD780DA1C5973CDF53C8A561 /* Models.swift in Sources */,
+				314634038926A2A8952445BD /* NotificationScheduler.swift in Sources */,
 				7E3AEDA47DBD7571EC4AFCB4 /* RecurringView.swift in Sources */,
 				111ECE6A7F1068EB9AB3B35C /* SettingsView.swift in Sources */,
 				EBA0C41857FB74337FF27F80 /* Store.swift in Sources */,
@@ -163,11 +167,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Xpense/Info.plist;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -244,11 +244,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Xpense/Info.plist;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

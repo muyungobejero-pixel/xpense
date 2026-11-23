@@ -11,7 +11,17 @@ final class Store: ObservableObject {
     @Published var currentMonth: String
     @Published var filter: Filter = .all
 
-    private static let storageKey = "xpense.data.v1"
+    private static let storageKeyPrefix = "xpense.data.v1"
+
+    /// The active data owner. Set by `setNamespace(_:)` when the user signs in
+    /// or skips. Each namespace gets its own `UserDefaults` key so identities
+    /// don't share data.
+    private(set) var namespace: String = ""
+
+    /// The fully-qualified storage key for the current namespace.
+    private var storageKey: String {
+        Self.storageKeyPrefix + (namespace.isEmpty ? "" : ".\(namespace)")
+    }
 
     private static let defaultItems: [(name: String, amount: Double, dueDay: Int, category: String)] = [
         ("Rent / Mortgage", 1200, 1, "Housing"),
@@ -26,16 +36,34 @@ final class Store: ObservableObject {
     ]
 
     init() {
-        self.data = Store.load()
+        self.data = AppData()
         self.currentMonth = currentMonthKey()
+        loadForNamespace()
+    }
+
+    /// Switches the store to the given data owner. Reloads that user's data
+    /// (freshly seeded if none exists yet) and resets the view to this month.
+    /// Called whenever the auth identity changes.
+    func setNamespace(_ newNamespace: String) {
+        guard newNamespace != namespace else { return }
+        namespace = newNamespace
+        data = AppData()
+        currentMonth = currentMonthKey()
+        filter = .all
+        loadForNamespace()
+    }
+
+    private func loadForNamespace() {
+        self.data = Store.load(storageKey: storageKey)
         seedIfEmpty()
         ensureCategoriesCoverItems()
         materialize(currentMonth)
+        resyncNotifications()
     }
 
     // MARK: - Persistence
 
-    private static func load() -> AppData {
+    private static func load(storageKey: String) -> AppData {
         guard let data = UserDefaults.standard.data(forKey: storageKey),
               let decoded = try? JSONDecoder().decode(AppData.self, from: data) else {
             return AppData()
@@ -45,7 +73,7 @@ final class Store: ObservableObject {
 
     func save() {
         if let encoded = try? JSONEncoder().encode(data) {
-            UserDefaults.standard.set(encoded, forKey: Self.storageKey)
+            UserDefaults.standard.set(encoded, forKey: storageKey)
         }
     }
 
@@ -187,6 +215,7 @@ final class Store: ObservableObject {
             paid: false, isAuto: false))
         data.state[key] = month
         save()
+        resyncNotifications()
     }
 
     func update(id: String, name: String, amount: Double, dueDay: Int?, category: String, recurrence: Recurrence, anchorMonth: Int?) {
@@ -209,6 +238,7 @@ final class Store: ObservableObject {
         }
         data.state[key] = month
         save()
+        resyncNotifications()
     }
 
     func delete(id: String) {
@@ -217,6 +247,7 @@ final class Store: ObservableObject {
         month.removeAll { $0.id == id }
         data.state[key] = month
         save()
+        resyncNotifications()
     }
 
     func togglePaid(id: String) {
@@ -227,13 +258,14 @@ final class Store: ObservableObject {
         }
         data.state[key] = month
         save()
+        resyncNotifications()
     }
 
     func stopSeries(_ sid: String) {
         guard !data.stoppedSeries.contains(sid) else { return }
         data.stoppedSeries.insert(sid)
         for key in data.state.keys {
-            guard var arr = data.state[key] else { continue }
+            guard let arr = data.state[key] else { continue }
             var kept: [ExpenseItem] = []
             for var item in arr {
                 if item.seriesId != sid {
@@ -249,6 +281,7 @@ final class Store: ObservableObject {
             data.state[key] = kept
         }
         save()
+        resyncNotifications()
     }
 
     func recurringRules() -> [ExpenseItem] {
@@ -309,6 +342,7 @@ final class Store: ObservableObject {
         currentMonth = currentMonthKey()
         seedIfEmpty()
         save()
+        resyncNotifications()
     }
 
     // MARK: - Backup
@@ -325,6 +359,7 @@ final class Store: ObservableObject {
         currentMonth = currentMonthKey()
         ensureCategoriesCoverItems()
         save()
+        resyncNotifications()
     }
 
     // MARK: - Formatting / presentation helpers
@@ -358,4 +393,26 @@ final class Store: ObservableObject {
 
     func total(_ items: [ExpenseItem]) -> Double { items.reduce(0) { $0 + $1.amount } }
     func paidAmount(_ items: [ExpenseItem]) -> Double { items.filter { $0.paid }.reduce(0) { $0 + $1.amount } }
+
+    // MARK: - Notifications
+
+    /// Rebuilds pending local notifications to match the current data and
+    /// notification settings. Uses the current month's items; recurring items
+    /// resolve their next occurrence inside the scheduler.
+    func resyncNotifications() {
+        let all = data.state.values.flatMap { $0 }
+        NotificationScheduler.resync(
+            items: all,
+            enabled: data.notificationsEnabled,
+            leadDays: data.notificationLeadDays,
+            formatAmount: { [weak self] amount in self?.money(amount) ?? "" }
+        )
+    }
+
+    func setNotifications(enabled: Bool? = nil, leadDays: Int? = nil) {
+        if let enabled { data.notificationsEnabled = enabled }
+        if let leadDays { data.notificationLeadDays = max(0, leadDays) }
+        save()
+        resyncNotifications()
+    }
 }

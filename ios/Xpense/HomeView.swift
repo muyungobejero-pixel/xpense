@@ -2,11 +2,13 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject var store: Store
+    @EnvironmentObject var auth: AuthManager
 
     @State private var showAdd = false
     @State private var editingItem: ExpenseItem?
     @State private var showRecurring = false
     @State private var showSettings = false
+    @State private var showSignOutConfirm = false
 
     var body: some View {
         NavigationStack {
@@ -30,6 +32,8 @@ struct HomeView: View {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     Button { showRecurring = true } label: { Image(systemName: "arrow.clockwise") }
                     Button { showSettings = true } label: { Image(systemName: "gearshape") }
+
+                    accountMenu
                 }
                 ToolbarItem(placement: .bottomBar) {
                     Button { showAdd = true } label: {
@@ -53,7 +57,68 @@ struct HomeView: View {
                 SettingsView()
                     .environmentObject(store)
             }
+            .confirmationDialog(
+                "Sign out of Google?",
+                isPresented: $showSignOutConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Sign out", role: .destructive) { auth.signOut() }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Your local data stays on this device, and you'll return to the sign-in screen.")
+            }
         }
+    }
+
+    // MARK: - Account menu (toolbar)
+
+    /// A visible account indicator: the signed-in user's avatar + name, which
+    /// opens a menu with account info and a sign-out action. When the user
+    /// skipped sign-in, this instead offers a "Sign in" button.
+    @ViewBuilder
+    private var accountMenu: some View {
+        if let user = auth.currentUser {
+            Menu {
+                Text(user.name.isEmpty ? user.email : user.name)
+                if !user.email.isEmpty {
+                    Text(user.email).foregroundColor(.secondary)
+                }
+                Divider()
+                Button(role: .destructive) {
+                    showSignOutConfirm = true
+                } label: {
+                    Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
+                }
+            } label: {
+                accountLabel(name: user.name, email: user.email)
+            }
+        } else {
+            Button {
+                auth.showLogin()
+            } label: {
+                Label("Sign in", systemImage: "person.crop.circle.badge.plus")
+            }
+        }
+    }
+
+    /// Renders the compact avatar + name used as the menu's label.
+    private func accountLabel(name: String, email: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "person.crop.circle.fill")
+            if !name.isEmpty {
+                Text(displayName(name: name, email: email))
+                    .font(.subheadline.weight(.medium))
+                    .lineLimit(1)
+            }
+        }
+    }
+
+    /// Prefers the user's first name for a compact toolbar label; falls back
+    /// to the email's local-part.
+    private func displayName(name: String, email: String) -> String {
+        let first = name.split(separator: " ").first.map(String.init) ?? name
+        if !first.isEmpty { return first }
+        return email.split(separator: "@").first.map(String.init) ?? email
     }
 
     // MARK: - Sections

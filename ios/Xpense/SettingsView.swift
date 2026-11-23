@@ -56,6 +56,18 @@ struct SettingsView: View {
                 }
                 .onChange(of: store.data.currency) { _ in store.save() }
 
+                Section("Notifications") {
+                    Toggle("Enable reminders", isOn: notificationsEnabledBinding)
+                    if store.data.notificationsEnabled {
+                        Picker("Notify", selection: leadDaysBinding) {
+                            ForEach([0, 1, 2, 3, 5, 7], id: \.self) { d in
+                                Text(d == 0 ? "On the due date" : "\(d) day\(d == 1 ? "" : "s") before").tag(d)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
+                }
+
                 Section("Categories") {
                     ForEach(store.data.categories, id: \.self) { cat in
                         HStack {
@@ -135,6 +147,29 @@ struct SettingsView: View {
         Binding(
             get: { importError != nil },
             set: { if !$0 { importError = nil } }
+        )
+    }
+
+    // MARK: - Notification bindings
+
+    private var notificationsEnabledBinding: Binding<Bool> {
+        Binding(
+            get: { store.data.notificationsEnabled },
+            set: { newValue in
+                if newValue {
+                    NotificationScheduler.requestAuthorizationIfNeeded()
+                }
+                store.setNotifications(enabled: newValue)
+            }
+        )
+    }
+
+    private var leadDaysBinding: Binding<Int> {
+        Binding(
+            get: { store.data.notificationLeadDays },
+            set: { newValue in
+                store.setNotifications(leadDays: newValue)
+            }
         )
     }
 }

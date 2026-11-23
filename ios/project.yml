@@ -23,10 +23,6 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.example.xpense
-        GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_VERSION: "5.0"
         CODE_SIGN_STYLE: Automatic
@@ -35,11 +31,8 @@ targets:
     info:
       path: Xpense/Info.plist
       properties:
-        # --- Google Sign-In configuration ---
-        # Your OAuth client ID from Google Cloud Console.
+        UILaunchScreen: {}
         GIDClientID: 1083755514063-g3bor3bpok2oh3hi9crg9q702i0a3iaf.apps.googleusercontent.com
         CFBundleURLTypes:
           - CFBundleURLSchemes:
-              # The "reversed client ID" — your client ID with the
-              # dot-separated components in reverse order.
               - com.googleusercontent.apps.1083755514063-g3bor3bpok2oh3hi9crg9q702i0a3iaf
